@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="panel add">
+  <div>
+    <h1>Podcasts</h1>
+    <p>Add a Yandex Music podcast. Its newest season is selected automatically.</p>
+    {% if auth_status.source == 'missing' %}<p class="error">Yandex Music is not connected. <a href="/auth">Sign in with a device code</a>.</p>{% endif %}
+  </div>
+  <form method="post" action="/albums">
+    <label>Album ID <input name="album_id" type="number" min="1" required placeholder="12345678"></label>
+    <label>Check interval
+      <select name="interval_hours"><option value="24">Daily</option><option value="168">Weekly</option></select>
+    </label>
+    <button type="submit">Add podcast</button>
+  </form>
+</section>
+
+<section class="album-grid">
+{% for album in albums %}
+  <article class="album-card">
+    {% if album.cover_path %}<img src="/covers/{{ album.id }}.jpg" alt="">{% endif %}
+    <div>
+      <h2><a href="/albums/{{ album.id }}">{{ album.title or ('Album ' ~ album.id) }}</a></h2>
+      <p>{{ album.artists }}</p>
+      <p>{{ album.season_count }} season{{ '' if album.season_count == 1 else 's' }} · {{ album.downloaded_count }}/{{ album.episode_count }} downloaded</p>
+      {% if album.last_error %}<p class="error">{{ album.last_error }}</p>{% endif %}
+      <p><a class="feed" href="/{{ album.id }}.xml">RSS feed</a></p>
+    </div>
+  </article>
+{% else %}
+  <p>No podcasts configured yet.</p>
+{% endfor %}
+</section>
+{% endblock %}

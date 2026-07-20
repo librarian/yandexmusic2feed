@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ album.title or album.id }} · YandexMusic2Feed{% endblock %}
+{% block content %}
+<section class="album-head panel">
+  {% if album.cover_path %}<img src="/covers/{{ album.id }}.jpg" alt="">{% endif %}
+  <div>
+    <h1>{{ album.title or ('Album ' ~ album.id) }}</h1>
+    <p>{{ album.artists }}</p>
+    <p><a class="feed" href="/{{ album.id }}.xml">{{ base_url }}/{{ album.id }}.xml</a></p>
+    {% if album.last_error %}<p class="error">Last sync: {{ album.last_error }}</p>{% endif %}
+    <p class="muted">Last checked: {{ album.last_checked_at or 'not yet' }} · Next: {{ album.next_check_at or 'pending' }}</p>
+    <form class="inline" method="post" action="/albums/{{ album.id }}/sync"><button>Sync now</button></form>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Settings</h2>
+  <form method="post" action="/albums/{{ album.id }}/settings">
+    <label><input type="checkbox" name="enabled" {% if album.enabled %}checked{% endif %}> Scheduled checks enabled</label>
+    <label>Check interval
+      <select name="interval_hours">
+        <option value="24" {% if album.interval_hours == 24 %}selected{% endif %}>Daily</option>
+        <option value="168" {% if album.interval_hours == 168 %}selected{% endif %}>Weekly</option>
+      </select>
+    </label>
+    <fieldset><legend>Automatically download seasons</legend>
+      {% for season in seasons %}
+        <label><input type="checkbox" name="seasons" value="{{ season.number }}" {% if season.selected %}checked{% endif %}> Season {{ season.number }} ({{ season.episode_count }} episodes)</label>
+      {% endfor %}
+    </fieldset>
+    <button type="submit">Save and fetch selected seasons</button>
+  </form>
+</section>
+
+{% for season in seasons %}
+<section class="panel">
+  <h2>Season {{ season.number }}</h2>
+  <div class="episode-list">
+  {% for episode in episodes if episode.season_number == season.number %}
+    <article class="episode">
+      <div class="number">{{ '%02d'|format(episode.episode_number) }}</div>
+      <div class="episode-main">
+        <h3>{{ episode.title }}</h3>
+        {% if episode.download_error %}<p class="error">{{ episode.download_error }}</p>{% endif %}
+        {% if episode.local_path %}
+          <audio controls preload="none" src="/media/{{ episode.track_id }}.mp3"></audio>
+          <span class="status ok">Downloaded</span>
+        {% else %}
+          <form class="inline" method="post" action="/episodes/{{ episode.track_id }}/download?album_id={{ album.id }}"><button>Download on demand</button></form>
+        {% endif %}
+      </div>
+    </article>
+  {% endfor %}
+  </div>
+</section>
+{% endfor %}
+{% endblock %}

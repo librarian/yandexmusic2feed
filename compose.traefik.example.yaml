@@ -1,0 +1,19 @@
+services:
+  yandexmusic2feed:
+    environment:
+      PUBLIC_BASE_URL: "https://${APP_HOST:?Set APP_HOST}"
+    networks:
+      - proxy
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "${TRAEFIK_NETWORK:-proxy}"
+      traefik.http.routers.yandexmusic2feed.rule: "Host(`${APP_HOST:?Set APP_HOST}`)"
+      traefik.http.routers.yandexmusic2feed.entrypoints: "${TRAEFIK_ENTRYPOINT:-websecure}"
+      traefik.http.routers.yandexmusic2feed.tls: "true"
+      traefik.http.routers.yandexmusic2feed.tls.certresolver: "${TRAEFIK_CERT_RESOLVER:-letsencrypt}"
+      traefik.http.services.yandexmusic2feed.loadbalancer.server.port: "8000"
+
+networks:
+  proxy:
+    external: true
+    name: "${TRAEFIK_NETWORK:-proxy}"

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Yandex login · YandexMusic2Feed{% endblock %}
+{% block content %}
+<section class="panel auth-panel">
+  <h1>Yandex Music login</h1>
+  {% if auth_status.source == 'device_flow' %}
+    <p class="status ok">Connected with refreshable device-flow credentials.</p>
+    <p class="muted">Credentials are stored privately in the data directory and refreshed automatically.</p>
+  {% elif auth_status.source == 'environment' %}
+    <p>Connected using the <code>TOKEN</code> environment variable.</p>
+    <p class="muted">You can switch to refreshable credentials by starting Device Flow below.</p>
+  {% else %}
+    <p>Yandex Music is not connected.</p>
+  {% endif %}
+
+  {% if pending %}
+    <div id="device-auth" data-interval="{{ pending.interval }}">
+      <p>Open <a href="{{ pending.verification_url }}" target="_blank" rel="noreferrer">{{ pending.verification_url }}</a> and enter:</p>
+      <p class="device-code">{{ pending.user_code }}</p>
+      <p id="device-status" class="muted">Waiting for approval…</p>
+    </div>
+    <script>
+      (() => {
+        const box = document.getElementById('device-auth');
+        const status = document.getElementById('device-status');
+        const interval = Math.max(1, Number(box.dataset.interval || 5)) * 1000;
+        const poll = async () => {
+          try {
+            const response = await fetch('/auth/device/poll', {method: 'POST'});
+            const result = await response.json();
+            if (result.status === 'authorized') {
+              status.textContent = 'Connected. Reloading…';
+              window.location.reload();
+              return;
+            }
+            if (result.status === 'expired') {
+              status.textContent = 'The code expired. Start again.';
+              return;
+            }
+          } catch (_) {
+            status.textContent = 'Temporary polling error; retrying…';
+          }
+          window.setTimeout(poll, interval);
+        };
+        window.setTimeout(poll, interval);
+      })();
+    </script>
+  {% else %}
+    <form method="post" action="/auth/device/start">
+      <button type="submit">Start Device Flow</button>
+    </form>
+  {% endif %}
+</section>
+
+<section class="panel">
+  <h2>Security</h2>
+  <p>This page controls credentials. Expose it only on a trusted network or protect it at your reverse proxy.</p>
+  <p>No access or refresh token is displayed in the browser or written to application logs.</p>
+</section>
+{% endblock %}

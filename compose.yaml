@@ -1,0 +1,26 @@
+services:
+  yandexmusic2feed:
+    image: ${YANDEXMUSIC2FEED_IMAGE:-yandexmusic2feed:local}
+    build: .
+    restart: unless-stopped
+    user: "${PUID:-1000}:${PGID:-1000}"
+    environment:
+      TOKEN: "${TOKEN:-}"
+      DATA_DIR: /data
+      MEDIA_DIR: /podcasts
+      PUBLIC_BASE_URL: "${PUBLIC_BASE_URL:-http://localhost:8000}"
+      SCHEDULER_POLL_SECONDS: "${SCHEDULER_POLL_SECONDS:-300}"
+      DOWNLOAD_BITRATE_KBPS: "${DOWNLOAD_BITRATE_KBPS:-192}"
+      MIN_FREE_GB: "${MIN_FREE_GB:-10}"
+      YANDEX_CLIENT_ID: "${YANDEX_CLIENT_ID:-}"
+      YANDEX_CLIENT_SECRET: "${YANDEX_CLIENT_SECRET:-}"
+      YANDEX_DEVICE_NAME: "${YANDEX_DEVICE_NAME:-YandexMusic2Feed}"
+    volumes:
+      - ${DATA_VOLUME:-yandexmusic2feed-data}:/data
+      - ${MEDIA_VOLUME:-yandexmusic2feed-media}:/podcasts
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT:-8000}:8000"
+
+volumes:
+  yandexmusic2feed-data:
+  yandexmusic2feed-media:
