@@ -34,7 +34,7 @@ jobs:
           docker compose config --quiet
           docker compose -f compose.yaml -f compose.traefik.example.yaml config --quiet
       - uses: docker/setup-buildx-action@v4.2.0
-      - uses: docker/build-push-action@v7.3.0
+      - uses: docker/build-push-action@v7.4.0
         with:
           context: .
           push: false
